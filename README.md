@@ -1,4 +1,4 @@
-# 🏅 UniSports Hub - Frontend (Pre-Backend Integration)
+# 🏅 UniSports Hub - Frontend (Version 1)
 
 **UniSports Hub** is a university sports management platform built to simplify how administrators, coaches, and students manage teams, schedules, and events.  
 This repository contains the **React.js frontend**, completed before backend and database integration.
