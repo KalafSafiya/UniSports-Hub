@@ -57,5 +57,6 @@ git checkout frontend-version-1
 👥 Contributor
 
 Safiya Kalaf (2021/ICT/71)– Frontend Developer
+
 (IT 3162 – Group Project)
 
