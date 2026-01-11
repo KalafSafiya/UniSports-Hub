@@ -13,6 +13,8 @@ import AdminDashboard from "./AdminPages/AdminDashbBoard/AdminDashBoard";
 import AdminManageNews from "./AdminPages/AdminNewsAnnouncements/AdminNewsAnnouncements";
 import AdminTeamApprovals from "./AdminPages/AdminCoachRequests/AdminCoachRequests";
 import AdminScheduleRequests from "./AdminPages/AdminScheduleRequests/AdminScheduleRequests";
+import AdminBookingRequests from "./AdminPages/AdminBookingRequests/AdminBookingRequests";
+import AdminContactRequests from "./AdminPages/AdminContact/AdminContact";
 
 // Coach Pages
 import CoachDashBoard from "./CoachPages/CoachDashBoard/CoachDashBoard";
@@ -39,9 +41,11 @@ function App() {
         <Route path="/news-and-announcements" element={<AdminManageNews />} />
         <Route path="/sports-requests" element={<AdminTeamApprovals />} />
         <Route path="/schedule-requests" element={<AdminScheduleRequests />} />
+        <Route path="/booking-requests" element={<AdminBookingRequests />} />
+        <Route path="/contact-requests" element={<AdminContactRequests />} />
 
         {/* Coach Routes */}
-        <Route path="/dashboard" element={<CoachDashBoard />} />
+        <Route path="/coach-dashboard" element={<CoachDashBoard />} />
         <Route path="/manage-team" element={<CoachManageTeams />} />
         <Route path="/schedule-session" element={<CoachManageSchedule />} />
 

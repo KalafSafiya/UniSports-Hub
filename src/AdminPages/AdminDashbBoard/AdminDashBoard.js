@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { FileText, Megaphone, Image, ClipboardList, Users } from "lucide-react";
+import React, { Activity, useState } from "react";
+import { FileText, Megaphone, Image, ClipboardList, Users, Calendar } from "lucide-react";
 import Navbar from "../../AdminComponents/NavBar";
 import Footer from "../../GuestComponents/Footer";
 
@@ -16,44 +16,38 @@ function AdminDashboard() {
 
     const cards = [
         {
-            title: "News",
+            title: "News and Announcements",
             value: stats.news,
             icon: <FileText className="w-10 h-10 text-blue-500" />,
             color: "bg-blue-50",
             button: "Manage",
-            path: "/admin/news",
+            path: "/news-and-announcements",
         },
+
         {
-            title: "Announcements",
+            title: "Pending Sports and Teams",
             value: stats.announcements,
-            icon: <Megaphone className="w-10 h-10 text-yellow-500" />,
+            icon: <Users className="w-10 h-10 text-yellow-500" />,
             color: "bg-yellow-50",
             button: "Manage",
-            path: "/admin/announcements",
+            path: "/sports-requests",
         },
-        {
-            title: "Cover Photos",
-            value: stats.coverPhotos,
-            icon: <Image className="w-10 h-10 text-purple-500" />,
-            color: "bg-purple-50",
-            button: "Upload",
-            path: "/admin/cover-photos",
-        },
+
         {
             title: "Pending Bookings",
             value: stats.pendingBookings,
             icon: <ClipboardList className="w-10 h-10 text-green-500" />,
             color: "bg-green-50",
             button: "Review",
-            path: "/admin/bookings",
+            path: "/booking-requests",
         },
         {
-            title: "Pending Teams",
+            title: "Pending Schedules",
             value: stats.pendingTeams,
-            icon: <Users className="w-10 h-10 text-pink-500" />,
+            icon: <Calendar className="w-10 h-10 text-pink-500" />,
             color: "bg-pink-50",
             button: "Approve",
-            path: "/admin/teams",
+            path: "/schedule-requests",
         },
     ];
 
@@ -106,3 +100,5 @@ function AdminDashboard() {
 }
 
 export default AdminDashboard;
+
+

@@ -22,7 +22,7 @@ function Login() {
         if (role === "Admin" && username === "admin" && password === "admin123") {
             navigate("/admin-dashboard");
         } else if (role === "Coach" && username === "coach" && password === "coach123") {
-            navigate("/dashboard");
+            navigate("/coach-dashboard");
         } else {
             setError("Invalid credentials. Please try again.");
         }

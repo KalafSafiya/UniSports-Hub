@@ -23,7 +23,7 @@ function Navbar() {
 
                 {/* Links */}
                 <nav className="hidden items-center gap-6 md:flex">
-                    {["Dashboard", "News And Announcements", "Sports Requests", "Schedule Requests"].map((link) => (
+                    {["Admin Dashboard", "News And Announcements", "Sports Requests", "Schedule Requests", "Booking Requests", "Contact Requests"].map((link) => (
                         <Link
                             key={link}
                             to={`/${link.toLowerCase().replace(/\s+/g, "-")}`}
