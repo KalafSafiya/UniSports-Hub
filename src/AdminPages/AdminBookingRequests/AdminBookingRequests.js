@@ -3,7 +3,6 @@ import Navbar from "../../AdminComponents/NavBar";
 import Footer from "../../GuestComponents/Footer";
 
 function AdminBookingRequests() {
-    // Mock data for now, replace with API fetch later
     const [bookings, setBookings] = useState([
         {
             booking_id: 1,
@@ -47,12 +46,12 @@ function AdminBookingRequests() {
         <div className="flex flex-col min-h-screen">
             <Navbar />
 
-            <main className="flex-grow pt-20 pb-10 bg-gray-50 dark:bg-gray-900">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-                        Venue Booking Requests
+            <main className="flex-grow pt-20 pb-10 bg-gray-50">
+                <div className="mx-auto max-w-7xl px-4">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-6">
+                        Guest Booking Requests
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400 mb-8">
+                    <p className="text-gray-600 mb-8">
                         Review and manage all venue booking requests submitted by guests.
                     </p>
 
@@ -73,9 +72,7 @@ function AdminBookingRequests() {
                                             <p className="text-gray-600">Email: {b.email}</p>
                                             <p className="text-gray-600">Sport: {b.sport}</p>
                                             <p className="text-gray-600">Venue: {b.venue}</p>
-                                            <p className="text-gray-600">
-                                                Date: {b.date} | Time: {b.time_slot}
-                                            </p>
+                                            <p className="text-gray-600">Date: {b.date} | Time: {b.time_slot}</p>
                                             {b.additional_notes && (
                                                 <p className="text-gray-700 mt-1">Notes: {b.additional_notes}</p>
                                             )}

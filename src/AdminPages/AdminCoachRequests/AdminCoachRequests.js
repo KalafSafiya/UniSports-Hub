@@ -3,7 +3,6 @@ import Navbar from "../../AdminComponents/NavBar";
 import Footer from "../../GuestComponents/Footer";
 
 function AdminCoachRequests() {
-    // Mock coach requests (replace with API or localStorage)
     const [requests, setRequests] = useState([
         {
             id: 1,
@@ -42,12 +41,12 @@ function AdminCoachRequests() {
         <div className="flex flex-col min-h-screen">
             <Navbar />
 
-            <main className="flex-grow pt-20 pb-10 bg-gray-50 dark:bg-gray-900">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-                        Coach Requests Management
+            <main className="flex-grow pt-20 pb-10 bg-gray-50">
+                <div className="mx-auto max-w-7xl px-4">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-6">
+                        Coach Schedule Requests
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400 mb-8">
+                    <p className="text-gray-600 mb-8">
                         Review and manage new team or sport requests submitted by coaches.
                     </p>
 
@@ -63,27 +62,19 @@ function AdminCoachRequests() {
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <h3 className="text-lg font-bold text-gray-900">
-                                                    {req.type === "Team Request"
-                                                        ? `Team: ${req.teamName}`
-                                                        : `New Sport: ${req.sport}`}
+                                                    {req.type === "Team Request" ? `Team: ${req.teamName}` : `New Sport: ${req.sport}`}
                                                 </h3>
                                                 <p className="text-gray-600">Coach: {req.coach}</p>
                                                 <p className="text-gray-600">Sport: {req.sport}</p>
                                                 {req.details && (
                                                     <p className="text-gray-700 mt-1">{req.details}</p>
                                                 )}
-
-                                                {/* Team members */}
                                                 {req.members && (
                                                     <ul className="mt-3 border-t pt-2 text-sm text-gray-700">
                                                         {req.members.map((m, idx) => (
                                                             <li key={idx} className="flex justify-between">
-                                                                <span>
-                                                                    {m.name} ({m.role})
-                                                                </span>
-                                                                <span className="text-gray-500">
-                                                                    {m.faculty}, {m.year}
-                                                                </span>
+                                                                <span>{m.name} ({m.role})</span>
+                                                                <span className="text-gray-500">{m.faculty}, {m.year}</span>
                                                             </li>
                                                         ))}
                                                     </ul>
@@ -111,12 +102,10 @@ function AdminCoachRequests() {
                         )}
                     </section>
 
-                    {/* Approved Section */}
+                    {/* Approved */}
                     {approved.length > 0 && (
                         <section className="mb-12">
-                            <h2 className="text-2xl font-semibold mb-4 text-green-700">
-                                Approved Requests
-                            </h2>
+                            <h2 className="text-2xl font-semibold mb-4 text-green-700">Approved Requests</h2>
                             <div className="space-y-3">
                                 {approved.map((req) => (
                                     <div key={req.id} className="bg-green-50 border p-4 rounded">
@@ -127,12 +116,10 @@ function AdminCoachRequests() {
                         </section>
                     )}
 
-                    {/* Rejected Section */}
+                    {/* Rejected */}
                     {rejected.length > 0 && (
                         <section>
-                            <h2 className="text-2xl font-semibold mb-4 text-red-700">
-                                Rejected Requests
-                            </h2>
+                            <h2 className="text-2xl font-semibold mb-4 text-red-700">Rejected Requests</h2>
                             <div className="space-y-3">
                                 {rejected.map((req) => (
                                     <div key={req.id} className="bg-red-50 border p-4 rounded">
