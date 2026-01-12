@@ -1,70 +1,53 @@
-# Getting Started with Create React App
+# 🏅 UniSports Hub – Frontend (Version 3)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**UniSports Hub** is a university sports management platform designed to manage sports activities, teams, and users efficiently. This repository contains **Version 3 of the React.js frontend**, which includes **dynamic scheduling features, admin approval workflows, and enhanced coach and booking management pages**.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 📘 Project Overview
 
-### `npm start`
+The frontend provides role-based user interfaces for **Admins, Coaches, and Students/Guests**. Version 3 focuses on:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- Admin-side approval of **coach-submitted schedules** and **guest booking requests**.  
+- Coach-side management of practice and match sessions (pending approval).  
+- Unified dynamic schedule handling ready for backend integration.  
+- UI enhancements for better management and review of requests.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## 🚀 Key Features & Updates (Version 3)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **Admin Booking Requests Page** – Approve or reject guest bookings.  
+- **Admin Coach Requests Page** – Approve or reject schedules submitted by coaches.  
+- **Coach Manage Schedule Page** – Add, edit, and remove practice/match sessions; all sessions pending admin approval.  
+- Dynamic state management using **React useState** hooks.  
+- Unified schedule table for **Practice, Match, and Event sessions**.  
+- Calendar view displaying schedules with color-coded types.  
+- Fully responsive layout using **Tailwind CSS**.  
+- Ready for backend API integration.
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 🛠️ Tech Stack
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+React.js, Tailwind CSS, React Router DOM, Lucide React Icons, Create React App, Git & GitHub
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## 🌿 Branch Information
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+| Branch | Description |
+|-------|-------------|
+| `main` | Stable branch |
+| `frontend-v2` | Previous version with admin UI updates |
+| `frontend-v3` | Latest version with dynamic schedules and admin approval features |
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## ⚙️ Setup Instructions
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Clone the repository:
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```bash
+git clone https://github.com/KalafSafiya/UniSports-Hub-FE.git
+cd UniSports-Hub-FE
