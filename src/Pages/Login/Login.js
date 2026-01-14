@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { login } from "../../Services/authService";
 
 function Login() {
     const [role, setRole] = useState("");
@@ -8,7 +9,6 @@ function Login() {
     const [error, setError] = useState("");
 
     const navigate = useNavigate();
-    const location = useLocation();
 
     // Go back to previous page
     const handleClose = () => {
@@ -16,15 +16,30 @@ function Login() {
     };
 
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
+        setError("");
 
-        if (role === "Admin" && username === "admin" && password === "admin123") {
-            navigate("/admin-dashboard");
-        } else if (role === "Coach" && username === "coach" && password === "coach123") {
-            navigate("/coach-dashboard");
-        } else {
-            setError("Invalid credentials. Please try again.");
+        try {
+            const data = await login({
+                username,
+                password, 
+                role
+            });
+
+            localStorage.setItem("user", JSON.stringify(data));
+
+            if (data.role === "Admin") {
+                navigate("/admin-dashboard");
+            }
+            else if (data.role === "Coach") {
+                navigate("/coach-dashboard");
+            }
+        }
+        catch (error) {
+            setError(
+                error.response?.data?.message || "Login Failed. Please try again."
+            );
         }
     };
 
