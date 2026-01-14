@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import Navbar from "../../AdminComponents/NavBar";
 import Footer from "../../GuestComponents/Footer";
+import { getNews, getNewsById, createNews, updateNews, deleteNews } from "../../Services/newsService";
+import { getAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement, getAnnouncementById } from "../../Services/announcementService";
 
 function AdminNewsAnnouncements() {
     const [activeTab, setActiveTab] = useState("news"); // 'news' or 'announcements'
@@ -8,6 +10,39 @@ function AdminNewsAnnouncements() {
     const [newsList, setNewsList] = useState([]);
     const [announcementsList, setAnnouncementsList] = useState([]);
 
+    useEffect(() => {
+        fetchAllNews();
+        fetchAllAnnouncements();
+    });
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleString("en-US", {
+            month: "short",
+            day: "2-digit",
+            year: "numeric"
+        });
+    }
+
+    const fetchAllAnnouncements = async () => {
+        try {
+            const data = await getAnnouncements();
+            setAnnouncementsList(Array.isArray(data) ? data : []);
+        }
+        catch (error) {
+            console.log("Error fetching announcements: ", error);
+        }
+    }
+
+    const fetchAllNews = async () => {
+        try {
+            const data = await getNews();
+            setNewsList(Array.isArray(data) ? data : []);
+        }
+        catch (error) {
+            console.log("Error fetching news:", error);
+        }
+    }
+    
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -127,7 +162,7 @@ function AdminNewsAnnouncements() {
                                         <div>
                                             <h3 className="font-bold text-lg">{item.title}</h3>
                                             <p className="text-gray-700">{item.description}</p>
-                                            {item.date && <p className="text-sm text-gray-500 mt-1">{item.date}</p>}
+                                            {item.date && <p className="text-sm text-gray-500 mt-1">{formatDate(item.date)}</p>}
                                             {item.link && (
                                                 <a
                                                     href={item.link}
