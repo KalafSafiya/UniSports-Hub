@@ -22,7 +22,10 @@ app.use("/api/sports", require("./routers/sport.routes"));
 app.use("/api/teams", require('./routers/team.routes'));
 
 // Team Member Router -->
-app.use("/api/team-member", require('./routers/teamMember.routes'));
+app.use("/api/team-members", require('./routers/teamMember.routes'));
+
+// Coach
+app.use("/api/coaches", require('./routers/coach.routes'));
 
 
 module.exports = app;
