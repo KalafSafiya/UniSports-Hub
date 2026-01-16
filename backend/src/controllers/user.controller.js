@@ -72,10 +72,6 @@ exports.getAllUsers = async (req, res) => {
 }
 
 /*
-    Get user by ID (Admin and Coach)
-*/
-
-/*
     Update user by ID (Admin Only)
 */
 exports.updateUser = async (req, res) => {
@@ -133,5 +129,35 @@ exports.deleteUser = async (req, res) => {
     catch (error) {
         console.error('Error deleting user: ', error);
         res.status(500).json({ message: 'User Deletion Failed' });
+    }
+}
+
+exports.updateUserStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!['Active', 'Inactive'].includes(status)) {
+            return res.status(400).json({ message: 'Invalid status value' });
+        }
+
+        const user = await User.findByPk(id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.status = status;
+        await user.save();
+
+        res.json({
+            message: 'Status updated successfully',
+            user_id: user.user_id,
+            status: user.status
+        })
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to update status" });
     }
 }
