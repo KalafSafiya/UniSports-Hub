@@ -15,12 +15,13 @@ require('../models/mysql/index');
 
 async function syncModels() {
     try {
-        await sequelize.sync({ alter: true });
+        await sequelize.sync();
         console.log("MySQL tables synced.");
     }
     catch (error) {
         console.error("MySQL sync error: ", error);
     }
 }
+
 
 module.exports = syncModels;
