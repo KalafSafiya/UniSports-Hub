@@ -1,271 +1,101 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../../CoachComponents/NavBar";
 import Footer from "../../GuestComponents/Footer";
-import { sports as initialSports } from "../../Data/SportsData";
+import api from "../../Services/api";
 
 function CoachManageTeams() {
-    const [sports, setSports] = useState([...initialSports]);
-    const [selectedSportIndex, setSelectedSportIndex] = useState(null);
-
+    const [sports, setSports] = useState([]);
     const [showSportModal, setShowSportModal] = useState(false);
-    const [showTeamModal, setShowTeamModal] = useState(false);
+    const [showConfirmBox, setShowConfirmBox] = useState(false); // Controls the confirmation box
+    const [sportForm, setSportForm] = useState({ name: "", description: "" });
 
-    const [newSportName, setNewSportName] = useState("");
-    const [newSportImg, setNewSportImg] = useState("");
+    useEffect(() => {
+        fetchApprovedSports();
+    }, []);
 
-    const [teamForm, setTeamForm] = useState({ name: "", members: [] });
-    const [editingTeamIndex, setEditingTeamIndex] = useState(null);
-
-    /* ---------- SPORT ---------- */
-    const handleAddSport = () => {
-        if (!newSportName) return;
-        setSports([...sports, { name: newSportName, img: newSportImg, teams: [] }]);
-        setNewSportName("");
-        setNewSportImg("");
-        setShowSportModal(false);
+    const fetchApprovedSports = async () => {
+        try {
+            const res = await api.get("/sports/approved");
+            setSports(res.data);
+        } catch (error) { console.error(error); }
     };
 
-    /* ---------- TEAM ---------- */
-    const handleSaveTeam = () => {
-        if (!teamForm.name) return;
-
-        const updatedSports = [...sports];
-        if (editingTeamIndex !== null) {
-            updatedSports[selectedSportIndex].teams[editingTeamIndex] = teamForm;
-        } else {
-            updatedSports[selectedSportIndex].teams.push(teamForm);
+    const handleSendRequest = async () => {
+        if (!sportForm.name) return;
+        try {
+            await api.post("/sports", { 
+                sport_name: sportForm.name, 
+                description: sportForm.description 
+            });
+            setShowSportModal(false);
+            setSportForm({ name: "", description: "" });
+            setShowConfirmBox(true); // Show custom confirmation instead of alert
+        } catch (error) {
+            alert("Error sending request.");
         }
-
-        setSports(updatedSports);
-        setTeamForm({ name: "", members: [] });
-        setEditingTeamIndex(null);
-        setShowTeamModal(false);
-    };
-
-    const handleRemoveTeam = (idx) => {
-        const updatedSports = [...sports];
-        updatedSports[selectedSportIndex].teams.splice(idx, 1);
-        setSports(updatedSports);
     };
 
     return (
         <div className="flex flex-col min-h-screen">
             <Navbar />
-
             <main className="flex-grow pt-20 pb-10 bg-gray-50">
                 <div className="max-w-7xl mx-auto px-4">
-                    <h1 className="text-3xl font-bold mb-6">Coach Manage Teams</h1>
-
-                    {/* ACTIONS */}
-                    <div className="flex gap-3 mb-6">
-                        <button
-                            onClick={() => setShowSportModal(true)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded"
-                        >
-                            Add Sport
-                        </button>
-
-                        <button
-                            disabled={selectedSportIndex === null}
-                            onClick={() => {
-                                setTeamForm({ name: "", members: [] });
-                                setEditingTeamIndex(null);
-                                setShowTeamModal(true);
-                            }}
-                            className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
-                        >
-                            Add Team
-                        </button>
+                    <div className="flex justify-between items-center mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900">Approved Sports</h1>
+                        <button onClick={() => setShowSportModal(true)} className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-700 transition">Request New Sport</button>
                     </div>
 
-                    {/* SPORTS LIST */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {sports.map((sport, sIdx) => (
-                            <div
-                                key={sIdx}
-                                onClick={() => setSelectedSportIndex(sIdx)}
-                                className={`p-4 rounded shadow cursor-pointer ${selectedSportIndex === sIdx
-                                    ? "border-2 border-blue-500"
-                                    : "border"
-                                    }`}
-                            >
-                                <div
-                                    className="h-32 bg-cover bg-center rounded mb-2"
-                                    style={{ backgroundImage: `url(${sport.img})` }}
-                                />
-                                <h3 className="font-semibold">{sport.name}</h3>
-
-                                {selectedSportIndex === sIdx &&
-                                    sport.teams.map((team, tIdx) => (
-                                        <div
-                                            key={tIdx}
-                                            className="flex justify-between bg-gray-100 p-2 rounded mt-2"
-                                        >
-                                            <span>{team.name}</span>
-                                            <div className="flex gap-2">
-                                                <button
-                                                    className="text-blue-600 text-sm"
-                                                    onClick={() => {
-                                                        setTeamForm(team);
-                                                        setEditingTeamIndex(tIdx);
-                                                        setShowTeamModal(true);
-                                                    }}
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    className="text-red-600 text-sm"
-                                                    onClick={() => handleRemoveTeam(tIdx)}
-                                                >
-                                                    Remove
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {sports.map((sport) => (
+                            <div key={sport.sport_id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition">
+                                <div 
+                                    className="h-48 bg-cover bg-center" 
+                                    style={{ backgroundImage: `url(${sport.image})` }}
+                                >
+                                    {!sport.image && <div className="h-full bg-gray-200 flex items-center justify-center text-gray-400">No Image</div>}
+                                </div>
+                                <div className="p-4 text-center">
+                                    <h3 className="font-bold text-lg text-gray-800 uppercase tracking-wider">{sport.sport_name}</h3>
+                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
             </main>
 
-            {/* ADD SPORT MODAL */}
+            {/* REQUEST FORM MODAL */}
             {showSportModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded w-96">
-                        <h3 className="text-xl font-semibold mb-4">Add Sport</h3>
-                        <input
-                            className="w-full p-2 mb-3 border rounded"
-                            placeholder="Sport Name"
-                            value={newSportName}
-                            onChange={(e) => setNewSportName(e.target.value)}
-                        />
-                        <input
-                            className="w-full p-2 mb-4 border rounded"
-                            placeholder="Image URL"
-                            value={newSportImg}
-                            onChange={(e) => setNewSportImg(e.target.value)}
-                        />
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => setShowSportModal(false)}
-                                className="bg-gray-400 px-3 py-1 rounded"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleAddSport}
-                                className="bg-blue-600 text-white px-3 py-1 rounded"
-                            >
-                                Save
-                            </button>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 animate-in zoom-in duration-200">
+                        <h2 className="text-2xl font-bold mb-6 text-gray-900 border-b pb-2">New Sport Request</h2>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">Sport Name</label>
+                                <input className="w-full border-gray-300 border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Rugby" onChange={e => setSportForm({...sportForm, name: e.target.value})} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">Reason / Description</label>
+                                <textarea rows="3" className="w-full border-gray-300 border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Explain why this sport is needed..." onChange={e => setSportForm({...sportForm, description: e.target.value})} />
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3 mt-8">
+                            <button onClick={() => setShowSportModal(false)} className="px-5 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg">Cancel</button>
+                            <button onClick={handleSendRequest} className="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-md">Send Request</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* ADD / EDIT TEAM MODAL */}
-            {showTeamModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded w-full max-w-2xl">
-                        <h3 className="text-xl font-semibold mb-4">
-                            {editingTeamIndex !== null ? "Edit Team" : "Add Team"}
-                        </h3>
-
-                        <input
-                            className="w-full p-2 mb-4 border rounded"
-                            placeholder="Team Name"
-                            value={teamForm.name}
-                            onChange={(e) =>
-                                setTeamForm({ ...teamForm, name: e.target.value })
-                            }
-                        />
-
-                        <h4 className="font-semibold mb-2">Members</h4>
-
-                        {teamForm.members.map((m, idx) => (
-                            <div key={idx} className="grid grid-cols-5 gap-2 mb-2">
-                                <input
-                                    className="border p-1 rounded col-span-2"
-                                    placeholder="Name"
-                                    value={m.name}
-                                    onChange={(e) => {
-                                        const members = [...teamForm.members];
-                                        members[idx].name = e.target.value;
-                                        setTeamForm({ ...teamForm, members });
-                                    }}
-                                />
-                                <input
-                                    className="border p-1 rounded"
-                                    placeholder="Role"
-                                    value={m.role}
-                                    onChange={(e) => {
-                                        const members = [...teamForm.members];
-                                        members[idx].role = e.target.value;
-                                        setTeamForm({ ...teamForm, members });
-                                    }}
-                                />
-                                <input
-                                    className="border p-1 rounded"
-                                    placeholder="Faculty"
-                                    value={m.faculty}
-                                    onChange={(e) => {
-                                        const members = [...teamForm.members];
-                                        members[idx].faculty = e.target.value;
-                                        setTeamForm({ ...teamForm, members });
-                                    }}
-                                />
-                                <input
-                                    className="border p-1 rounded"
-                                    placeholder="Year"
-                                    value={m.year}
-                                    onChange={(e) => {
-                                        const members = [...teamForm.members];
-                                        members[idx].year = e.target.value;
-                                        setTeamForm({ ...teamForm, members });
-                                    }}
-                                />
-                                <button
-                                    className="text-red-600 text-sm"
-                                    onClick={() => {
-                                        const members = [...teamForm.members];
-                                        members.splice(idx, 1);
-                                        setTeamForm({ ...teamForm, members });
-                                    }}
-                                >
-                                    Remove
-                                </button>
-                            </div>
-                        ))}
-
-                        <button
-                            onClick={() =>
-                                setTeamForm({
-                                    ...teamForm,
-                                    members: [
-                                        ...teamForm.members,
-                                        { name: "", role: "", faculty: "", year: "" },
-                                    ],
-                                })
-                            }
-                            className="mb-4 px-3 py-1 bg-green-600 text-white rounded"
-                        >
-                            + Add Member
-                        </button>
-
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => setShowTeamModal(false)}
-                                className="bg-gray-400 px-4 py-1 rounded"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleSaveTeam}
-                                className="bg-blue-600 text-white px-4 py-1 rounded"
-                            >
-                                Save Team
-                            </button>
+            {/* CONFIRMATION TEXT BOX (MODAL) */}
+            {showConfirmBox && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60]">
+                    <div className="bg-white p-8 rounded-xl shadow-2xl text-center max-w-sm border-t-8 border-green-500 animate-in fade-in slide-in-from-bottom-4">
+                        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                         </div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">Request Sent!</h3>
+                        <p className="text-gray-600 mb-6">Your sport request has been successfully delivered to the admin for review.</p>
+                        <button onClick={() => setShowConfirmBox(false)} className="w-full bg-gray-900 text-white py-3 rounded-lg font-bold hover:bg-gray-800 transition">Great, thanks!</button>
                     </div>
                 </div>
             )}
