@@ -21,4 +21,8 @@ app.use("/api/sports", require("./routers/sport.routes"));
 // Team Router -->
 app.use("/api/teams", require('./routers/team.routes'));
 
+// Team Member Router -->
+app.use("/api/team-member", require('./routers/teamMember.routes'));
+
+
 module.exports = app;
