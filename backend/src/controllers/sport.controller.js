@@ -1,142 +1,98 @@
 const Sport = require('../models/mysql/Sport');
 const User = require('../models/mysql/User');
 
-/*
-    Create new sport
-    @route: POST /api/sports
-*/
+/**
+ * Coach: Request a new sport
+ * @route POST /api/sports
+ */
 exports.createSport = async (req, res) => {
     try {
-        const { sport_name, image, coach_id } = req.body;
+        const { sport_name, description, image } = req.body;
+        // req.user comes from your auth.middleware.js decoded token
+        const coach_id = req.user.user_id || req.user.id; 
 
-        // Check if sport name already exists
+        // Check for existing sport name to prevent duplicates
         const existingSport = await Sport.findOne({ where: { sport_name }});
         if (existingSport) {
-            return res.status(400).json({ message: 'Sport name already exists' });
+            return res.status(400).json({ message: 'This sport name already exists' });
         }
 
-        // Check if coach exists 
-        const coach = await User.findByPk(coach_id);
-        if (!coach) {
-            return res.status(404).json({ message: 'Coach not found' });
-        }
-
-        // Create new sport
         const sport = await Sport.create({
             sport_name,
+            description,
             image,
-            coach_id
+            coach_id,
+            status: 'Pending' // Explicitly set as Pending for admin review
         });
 
-        res.status(201).json(sport);
+        res.status(201).json({ message: 'Sport request submitted successfully', sport });
+    } catch (error) {
+        console.error('Error creating sport request:', error);
+        res.status(500).json({ message: 'Failed to submit sport request' });
     }
-    catch (error) {
-        console.error('Error creating sport: ', error);
-        res.status(500).json({ message: 'Failed to create sport' });
+};
+
+/**
+ * Admin: Get all Pending requests
+ * @route GET /api/sports/pending
+ */
+exports.getPendingRequests = async (req, res) => {
+    try {
+        const requests = await Sport.findAll({
+            where: { status: 'Pending' },
+            include: {
+                model: User,
+                as: 'coach',
+                attributes: ['name', 'email'] // Retrieves coach details via FK
+            }
+        });
+        res.status(200).json(requests);
+    } catch (error) {
+        console.error('Error fetching pending requests:', error);
+        res.status(500).json({ message: 'Failed to fetch pending requests' });
     }
-}
+};
 
 /*
-    Get all sports
-    @route: GET /api/sports
+    Admin Action: Approve with Image or Reject
+    @route: PATCH /api/sports/:id/status
 */
-exports.getAllSports = async (req, res) => {
+exports.updateSportStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action, image } = req.body; 
+
+        const sport = await Sport.findByPk(id);
+        if (!sport) return res.status(404).json({ message: 'Sport not found' });
+
+        if (action === 'approve') {
+            await sport.update({ 
+                status: 'Approve',
+                image: image // This comes from the text field we just added
+            });
+            return res.status(200).json({ message: 'Approved' });
+        } else {
+            await sport.destroy();
+            return res.status(200).json({ message: 'Rejected' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+/*
+    Get all Approved sports for Grid Display
+    @route: GET /api/sports/approved
+*/
+exports.getApprovedSports = async (req, res) => {
     try {
         const sports = await Sport.findAll({
-            include: {
-                model: User,
-                as: 'coach',
-                attributes: ['user_id', 'name', 'username', 'email', 'role']
-            }
+            where: { status: 'Approve' }, // Only show approved ones
+            order: [['sport_name', 'ASC']]
         });
         res.status(200).json(sports);
+    } catch (error) {
+        console.error('Error fetching approved sports:', error);
+        res.status(500).json({ message: 'Failed to fetch sports list' });
     }
-    catch (error) {
-        console.error('Error fetching sports', error);
-
-    }
-}
-
-/*
-    Get sport by ID
-    @route: GET /api/sports/:id
-*/
-exports.getSportById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const sport = await Sport.findByPk(id, {
-            include: {
-                model: User,
-                as: 'coach',
-                attributes: ['user_id', 'name', 'username', 'email', 'role']
-            }
-        });
-
-        if (!sport) {
-            return res.status(404).json({ message: 'Sport not found' });
-        }
-
-        res.status(200).json(sport);
-    }   
-    catch (error) {
-        console.error('Error fetching sport: ', error);
-        res.status(500).json({ message: 'Failed to fetch sport' });
-    }
-}
-
-/* 
-    Update a sport
-    @routes: PUT /api/sports/:id
-*/
-exports.updateSport = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { sport_name, image, coach_id } = req.body;
-
-        const sport = await Sport.findByPk(id);
-        if (!sport) {
-            return res.status(404).json({ message: 'Sport not found' })
-        }
-
-        if (coach_id) {
-            const coach = await User.findByPk(coach_id);
-            if (!coach_id) {
-                return res.status(400).json({ message: 'Coach not found.' });
-            }
-        }
-
-        await sport.update({
-            sport_name,
-            image,
-            coach_id
-        });
-
-        res.status(200).json(sport);
-    }
-    catch (error) {
-        console.error('Error updating sport: ', error);
-        res.status(500).json({ message: 'Failed to update sport' });
-    }
-}
-
-/*
-    Delete a sport
-    @routes: DELETE /api/sports/:id
-*/
-exports.deleteSport = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const sport = await Sport.findByPk(id);
-        if (!sport) {
-            return res.status(404).json({ message: 'Sport not found' });
-        }
-
-        await sport.destroy();
-
-        res.status(200).json({ message: 'Sport deleted successfully.' });
-    }
-    catch (error) {
-        console.error('Error deleting sport: ', error);
-        res.status(500).json({ message: 'Failed to delete sport' });
-    }
-}
+};
