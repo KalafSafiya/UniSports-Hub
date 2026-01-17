@@ -1,325 +1,101 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../../CoachComponents/NavBar";
 import Footer from "../../GuestComponents/Footer";
-import { sports as approvedSports } from "../../Data/SportsData";
+import api from "../../Services/api";
 
 function CoachManageTeams() {
-    // Approved sports & teams (shown to coach)
-    const [sports, setSports] = useState(approvedSports);
-
-    // Selected sport to show teams
-    const [selectedSportIndex, setSelectedSportIndex] = useState(null);
-
-    // Modals
+    const [sports, setSports] = useState([]);
     const [showSportModal, setShowSportModal] = useState(false);
-    const [showTeamModal, setShowTeamModal] = useState(false);
-    const [showRequestSent, setShowRequestSent] = useState(false);
-
-    // SPORT REQUEST FORM
+    const [showConfirmBox, setShowConfirmBox] = useState(false); // Controls the confirmation box
     const [sportForm, setSportForm] = useState({ name: "", description: "" });
 
-    // TEAM FORM
-    const [teamForm, setTeamForm] = useState({ name: "", members: [] });
-    const [editingTeamIndex, setEditingTeamIndex] = useState(null);
+    useEffect(() => {
+        fetchApprovedSports();
+    }, []);
 
-    // Pending team requests (not displayed until admin approves)
-    const [pendingTeamRequests, setPendingTeamRequests] = useState([]);
+    const fetchApprovedSports = async () => {
+        try {
+            const res = await api.get("/sports/approved");
+            setSports(res.data);
+        } catch (error) { console.error(error); }
+    };
 
-    /* ---------- SEND SPORT REQUEST ---------- */
-    const handleSendSportRequest = () => {
+    const handleSendRequest = async () => {
         if (!sportForm.name) return;
-
-        // Send request to admin (simulation)
-        console.log("SPORT REQUEST SENT:", sportForm);
-
-        setShowSportModal(false);
-        setShowRequestSent(true);
-        setSportForm({ name: "", description: "" });
-    };
-
-    /* ---------- SEND TEAM REQUEST ---------- */
-    const handleSendTeamRequest = () => {
-        if (!teamForm.name || selectedSportIndex === null) return;
-
-        // Save request to pending list
-        const newRequest = {
-            sportId: sports[selectedSportIndex].id,
-            sportName: sports[selectedSportIndex].name,
-            team: teamForm,
-        };
-
-        setPendingTeamRequests([...pendingTeamRequests, newRequest]);
-        console.log("TEAM REQUEST SENT (pending):", newRequest);
-
-        setTeamForm({ name: "", members: [] });
-        setShowTeamModal(false);
-        setShowRequestSent(true);
-        setEditingTeamIndex(null);
-    };
-
-    /* ---------- EDIT / REMOVE APPROVED TEAM ---------- */
-    const handleRemoveTeam = (teamIdx) => {
-        if (selectedSportIndex === null) return;
-        const updatedSports = [...sports];
-        updatedSports[selectedSportIndex].teams.splice(teamIdx, 1);
-        setSports(updatedSports);
+        try {
+            await api.post("/sports", { 
+                sport_name: sportForm.name, 
+                description: sportForm.description 
+            });
+            setShowSportModal(false);
+            setSportForm({ name: "", description: "" });
+            setShowConfirmBox(true); // Show custom confirmation instead of alert
+        } catch (error) {
+            alert("Error sending request.");
+        }
     };
 
     return (
         <div className="flex flex-col min-h-screen">
             <Navbar />
-
             <main className="flex-grow pt-20 pb-10 bg-gray-50">
                 <div className="max-w-7xl mx-auto px-4">
-                    <h1 className="text-3xl font-bold mb-6">Coach Manage Teams</h1>
-
-                    {/* ACTION BUTTONS */}
-                    <div className="flex gap-3 mb-6">
-                        <button
-                            onClick={() => setShowSportModal(true)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded"
-                        >
-                            Request New Sport
-                        </button>
-
-                        <button
-                            disabled={selectedSportIndex === null}
-                            onClick={() => {
-                                setTeamForm({ name: "", members: [] });
-                                setEditingTeamIndex(null);
-                                setShowTeamModal(true);
-                            }}
-                            className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
-                        >
-                            Request New Team
-                        </button>
+                    <div className="flex justify-between items-center mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900">Approved Sports</h1>
+                        <button onClick={() => setShowSportModal(true)} className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-700 transition">Request New Sport</button>
                     </div>
 
-                    {/* SPORTS LIST */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {sports.map((sport, sIdx) => (
-                            <div key={sport.id}>
-                                {/* SPORT CARD */}
-                                <div
-                                    onClick={() =>
-                                        setSelectedSportIndex(
-                                            selectedSportIndex === sIdx ? null : sIdx
-                                        )
-                                    }
-                                    className={`p-4 rounded shadow cursor-pointer transition ${selectedSportIndex === sIdx
-                                            ? "border-2 border-blue-600 bg-blue-50"
-                                            : "border bg-white"
-                                        }`}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {sports.map((sport) => (
+                            <div key={sport.sport_id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition">
+                                <div 
+                                    className="h-48 bg-cover bg-center" 
+                                    style={{ backgroundImage: `url(${sport.image})` }}
                                 >
-                                    <div
-                                        className="h-32 bg-cover bg-center rounded mb-2"
-                                        style={{ backgroundImage: `url(${sport.img})` }}
-                                    />
-                                    <h3 className="font-semibold text-center">{sport.name}</h3>
+                                    {!sport.image && <div className="h-full bg-gray-200 flex items-center justify-center text-gray-400">No Image</div>}
                                 </div>
-
-                                {/* SHOW APPROVED TEAMS ONLY */}
-                                {selectedSportIndex === sIdx &&
-                                    sport.teams?.length > 0 && (
-                                        <div className="mt-2">
-                                            {sport.teams.map((team, tIdx) => (
-                                                <div
-                                                    key={tIdx}
-                                                    className="flex justify-between items-center bg-gray-100 p-2 rounded mb-2"
-                                                >
-                                                    <span>{team.name}</span>
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            className="text-blue-600 text-sm"
-                                                            onClick={() => {
-                                                                setTeamForm({ ...team });
-                                                                setEditingTeamIndex(tIdx);
-                                                                setShowTeamModal(true);
-                                                            }}
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            className="text-red-600 text-sm"
-                                                            onClick={() => handleRemoveTeam(tIdx)}
-                                                        >
-                                                            Remove
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
+                                <div className="p-4 text-center">
+                                    <h3 className="font-bold text-lg text-gray-800 uppercase tracking-wider">{sport.sport_name}</h3>
+                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
             </main>
 
-            {/* SPORT REQUEST MODAL */}
+            {/* REQUEST FORM MODAL */}
             {showSportModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded w-96">
-                        <h3 className="text-xl font-semibold mb-4">Request New Sport</h3>
-                        <input
-                            className="w-full p-2 mb-3 border rounded"
-                            placeholder="Sport Name"
-                            value={sportForm.name}
-                            onChange={(e) =>
-                                setSportForm({ ...sportForm, name: e.target.value })
-                            }
-                        />
-                        <textarea
-                            className="w-full p-2 mb-4 border rounded"
-                            placeholder="Description (admin only)"
-                            value={sportForm.description}
-                            onChange={(e) =>
-                                setSportForm({ ...sportForm, description: e.target.value })
-                            }
-                        />
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => setShowSportModal(false)}
-                                className="bg-gray-400 px-3 py-1 rounded"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleSendSportRequest}
-                                className="bg-blue-600 text-white px-3 py-1 rounded"
-                            >
-                                Send Request
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* TEAM REQUEST MODAL */}
-            {showTeamModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded w-full max-w-2xl">
-                        <h3 className="text-xl font-semibold mb-4">
-                            {editingTeamIndex !== null ? "Edit Team" : "Request New Team"}
-                        </h3>
-                        <p className="text-sm mb-2 text-gray-600">
-                            Selected Sport:{" "}
-                            <strong>
-                                {selectedSportIndex !== null
-                                    ? sports[selectedSportIndex].name
-                                    : ""}
-                            </strong>
-                        </p>
-                        <input
-                            className="w-full p-2 mb-4 border rounded"
-                            placeholder="Team Name"
-                            value={teamForm.name}
-                            onChange={(e) =>
-                                setTeamForm({ ...teamForm, name: e.target.value })
-                            }
-                        />
-
-                        <h4 className="font-semibold mb-2">Members</h4>
-                        {teamForm.members.map((m, idx) => (
-                            <div key={idx} className="grid grid-cols-5 gap-2 mb-2">
-                                <input
-                                    className="border p-1 rounded col-span-2"
-                                    placeholder="Name"
-                                    value={m.name}
-                                    onChange={(e) => {
-                                        const members = [...teamForm.members];
-                                        members[idx].name = e.target.value;
-                                        setTeamForm({ ...teamForm, members });
-                                    }}
-                                />
-                                <input
-                                    className="border p-1 rounded"
-                                    placeholder="Role"
-                                    value={m.role}
-                                    onChange={(e) => {
-                                        const members = [...teamForm.members];
-                                        members[idx].role = e.target.value;
-                                        setTeamForm({ ...teamForm, members });
-                                    }}
-                                />
-                                <input
-                                    className="border p-1 rounded"
-                                    placeholder="Faculty"
-                                    value={m.faculty}
-                                    onChange={(e) => {
-                                        const members = [...teamForm.members];
-                                        members[idx].faculty = e.target.value;
-                                        setTeamForm({ ...teamForm, members });
-                                    }}
-                                />
-                                <input
-                                    className="border p-1 rounded"
-                                    placeholder="Year"
-                                    value={m.year}
-                                    onChange={(e) => {
-                                        const members = [...teamForm.members];
-                                        members[idx].year = e.target.value;
-                                        setTeamForm({ ...teamForm, members });
-                                    }}
-                                />
-                                <button
-                                    className="text-red-600 text-sm"
-                                    onClick={() => {
-                                        const members = [...teamForm.members];
-                                        members.splice(idx, 1);
-                                        setTeamForm({ ...teamForm, members });
-                                    }}
-                                >
-                                    Remove
-                                </button>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 animate-in zoom-in duration-200">
+                        <h2 className="text-2xl font-bold mb-6 text-gray-900 border-b pb-2">New Sport Request</h2>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">Sport Name</label>
+                                <input className="w-full border-gray-300 border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Rugby" onChange={e => setSportForm({...sportForm, name: e.target.value})} />
                             </div>
-                        ))}
-
-                        <button
-                            onClick={() =>
-                                setTeamForm({
-                                    ...teamForm,
-                                    members: [
-                                        ...teamForm.members,
-                                        { name: "", role: "", faculty: "", year: "" },
-                                    ],
-                                })
-                            }
-                            className="mb-4 px-3 py-1 bg-green-600 text-white rounded"
-                        >
-                            + Add Member
-                        </button>
-
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => setShowTeamModal(false)}
-                                className="bg-gray-400 px-3 py-1 rounded"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleSendTeamRequest}
-                                className="bg-green-600 text-white px-3 py-1 rounded"
-                            >
-                                {editingTeamIndex !== null ? "Save Changes" : "Send Request"}
-                            </button>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">Reason / Description</label>
+                                <textarea rows="3" className="w-full border-gray-300 border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Explain why this sport is needed..." onChange={e => setSportForm({...sportForm, description: e.target.value})} />
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3 mt-8">
+                            <button onClick={() => setShowSportModal(false)} className="px-5 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg">Cancel</button>
+                            <button onClick={handleSendRequest} className="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-md">Send Request</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* REQUEST SENT DIALOG */}
-            {showRequestSent && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded w-80 text-center">
-                        <h3 className="text-xl font-semibold mb-4">Request Sent!</h3>
-                        <p>Your request has been sent to the admin for approval.</p>
-                        <button
-                            onClick={() => setShowRequestSent(false)}
-                            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
-                        >
-                            OK
-                        </button>
+            {/* CONFIRMATION TEXT BOX (MODAL) */}
+            {showConfirmBox && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60]">
+                    <div className="bg-white p-8 rounded-xl shadow-2xl text-center max-w-sm border-t-8 border-green-500 animate-in fade-in slide-in-from-bottom-4">
+                        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">Request Sent!</h3>
+                        <p className="text-gray-600 mb-6">Your sport request has been successfully delivered to the admin for review.</p>
+                        <button onClick={() => setShowConfirmBox(false)} className="w-full bg-gray-900 text-white py-3 rounded-lg font-bold hover:bg-gray-800 transition">Great, thanks!</button>
                     </div>
                 </div>
             )}
