@@ -1,5 +1,7 @@
 const Sport = require('../models/mysql/Sport');
 const User = require('../models/mysql/User');
+const Team = require('../models/mysql/Team');
+const TeamMember = require('../models/mysql/TeamMember'); // [UPDATE]: Added TeamMember import
 
 /**
  * Coach: Request a new sport
@@ -7,11 +9,9 @@ const User = require('../models/mysql/User');
  */
 exports.createSport = async (req, res) => {
     try {
-        const { sport_name, description, image } = req.body;
-        // req.user comes from your auth.middleware.js decoded token
+        const { sport_name, description } = req.body;
         const coach_id = req.user.user_id || req.user.id; 
 
-        // Check for existing sport name to prevent duplicates
         const existingSport = await Sport.findOne({ where: { sport_name }});
         if (existingSport) {
             return res.status(400).json({ message: 'This sport name already exists' });
@@ -20,9 +20,8 @@ exports.createSport = async (req, res) => {
         const sport = await Sport.create({
             sport_name,
             description,
-            image,
             coach_id,
-            status: 'Pending' // Explicitly set as Pending for admin review
+            status: 'Pending' 
         });
 
         res.status(201).json({ message: 'Sport request submitted successfully', sport });
@@ -31,6 +30,27 @@ exports.createSport = async (req, res) => {
         res.status(500).json({ message: 'Failed to submit sport request' });
     }
 };
+
+/*
+    Get All Sports
+    @route GET /api/sports
+*/
+exports.getAllSports = async (req, res) => {
+    try {
+        const sports = await Sport.findAll();
+
+        if (!sports) {
+            return res.status(404).json({ message: "Sport not found" });
+        }
+
+        res.status(200).json(sports);
+    } 
+    catch (error) {
+        console.error('Error fetching sports: ', error);
+        req.status(500).json({ message: 'Failed to fectch sports' });
+    }
+}
+
 
 /**
  * Admin: Get all Pending requests
@@ -43,7 +63,7 @@ exports.getPendingRequests = async (req, res) => {
             include: {
                 model: User,
                 as: 'coach',
-                attributes: ['name', 'email'] // Retrieves coach details via FK
+                attributes: ['name', 'email'] 
             }
         });
         res.status(200).json(requests);
@@ -67,8 +87,8 @@ exports.updateSportStatus = async (req, res) => {
 
         if (action === 'approve') {
             await sport.update({ 
-                status: 'Approve',
-                image: image // This comes from the text field we just added
+                status: 'Approved',
+                image: image 
             });
             return res.status(200).json({ message: 'Approved' });
         } else {
@@ -87,12 +107,59 @@ exports.updateSportStatus = async (req, res) => {
 exports.getApprovedSports = async (req, res) => {
     try {
         const sports = await Sport.findAll({
-            where: { status: 'Approve' }, // Only show approved ones
-            order: [['sport_name', 'ASC']]
+            where: { status: 'Approved' },
+            include: [
+                {
+                    model: Team,
+                    where: { status: 'Active' },
+                    required: false,
+                    // [UPDATE]: Added TeamMember inclusion so members are available for the Edit modal
+                    include: [
+                        {
+                            model: TeamMember
+                        }
+                    ]
+                }
+            ]
         });
         res.status(200).json(sports);
     } catch (error) {
-        console.error('Error fetching approved sports:', error);
-        res.status(500).json({ message: 'Failed to fetch sports list' });
+        console.error('Error fetching approved sports:', error); // [UPDATE]: Added logging
+        res.status(500).json({ message: 'Error fetching sports' });
     }
 };
+
+/*
+    Get own approved sports
+    @route GET /api/aports/my-approved
+*/
+exports.getMyApprovedSports = async (req, res) => {
+    try {
+        const coach_id = req.user.user_id || req.user_id;
+
+        const sports = await Sport.findAll({
+            where: {
+                coach_id,
+                status: 'Approved'
+            },
+            include: [
+                {
+                    model: Team,
+                    where: { status: 'Active'},
+                    required: false,
+                    include: [
+                        {
+                            model: TeamMember
+                        }
+                    ]
+                }
+            ]
+        });
+
+        res.status(200).json(sports);
+    }
+    catch (error) {
+        console.error('Error fetching coach approved sports', error);
+        res.status(500).json({ message: 'Failed to fetch coach sports' });
+    }
+}
