@@ -163,3 +163,38 @@ exports.getMyApprovedSports = async (req, res) => {
         res.status(500).json({ message: 'Failed to fetch coach sports' });
     }
 }
+
+/** Get approved sports with teams and team members */
+exports.getApprovedSportsWithTeams = async (req, res) => {
+    try {
+        const sports = await Sport.findAll({
+            where: { status: 'Approved' },
+            attributes: ['sport_id', 'sport_name', 'image'],
+            include: [
+                {
+                    model: Team,
+                    attributes: ['team_id', 'team_name'],
+                    include: [
+                        {
+                            model: TeamMember,
+                            attributes: [
+                                'role',
+                                'member_name',
+                                'registration_number',
+                                'faculty',
+                                'year'
+                            ]
+                        }
+                    ]
+                }
+            ],
+            order: [['sport_name', 'ASC']]
+        });
+
+        res.status(200).json(sports);
+    }
+    catch (error) {
+        console.error('Error fetching sports with teams: ', error);
+        res.status(500).json({ message: 'Failed to load sports data' });
+    }
+}
