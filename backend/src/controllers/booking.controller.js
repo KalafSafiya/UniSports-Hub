@@ -1,6 +1,8 @@
 const Booking = require('../models/mysql/Booking');
 const Sport = require('../models/mysql/Sport'); // [FIX]: Added missing import
 const Venue = require('../models/mysql/Venue'); // [FIX]: Added missing import
+const Schedule = require('../models/mysql/Schedule');
+const { Op } = require('sequelize');
 const nodemailer = require('nodemailer');
 
 exports.createBooking = async (req, res) => {
@@ -61,7 +63,33 @@ exports.updateBookingStatus = async (req, res) => {
         const booking = await Booking.findByPk(id);
         if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-        // 1. Update the database first
+        if (status === 'Approved') {
+            const conflictBooking = await Booking.findOne({
+                where: {
+                    venue_id: booking.venue_id,
+                    date: booking.date,
+                    status: 'Approved',
+                    booking_id: { [ Op.ne ]: booking.booking_id },
+                    start_time: { [Op.lt]: booking.end_time },
+                    end_time: { [Op.gt]: booking.start_time }
+                }
+            });
+
+            const conflictSchedule = await Schedule.findOne({
+                where: {
+                    venue_id: booking.venue_id,
+                    date: booking.date,
+                    status: 'Approved',
+                    start_time: { [Op.lt]: booking.end_time },
+                    end_time: { [Op.gt]: booking.start_time }
+                }
+            });
+
+            if (conflictBooking || conflictSchedule) {
+                return res.status(400).json({ message: 'Venue already booked at this time' });
+            }
+        }
+
         await booking.update({ 
             status, 
             rejection_reason: status === 'Rejected' ? reason : null 
