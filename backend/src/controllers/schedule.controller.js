@@ -3,6 +3,7 @@ const Sport = require('../models/mysql/Sport');
 const Team = require('../models/mysql/Team');
 const Venue = require('../models/mysql/Venue');
 const User = require('../models/mysql/User')
+const Booking = require('../models/mysql/Booking');
 const { Op } = require('sequelize');
 
 /** Create new schedule requests */
@@ -273,6 +274,31 @@ exports.approveSchedule = async (req, res) => {
         const schedule = await Schedule.findByPk(id);
         if (!schedule) {
             res.status(404).json({ message: 'Schedule not found' });
+        }
+
+        const conflictBooking = await Booking.findOne({
+            where: {
+                venue_id: schedule.venue_id,
+                date: schedule.date,
+                status: 'Approved',
+                start_time: { [Op.lt]: schedule.end_time },
+                end_time: { [Op.gt]: schedule.start_time }
+            }
+        });
+
+        const conflictSchedule = await Schedule.findOne({
+            where: {
+                venue_id: schedule.venue_id,
+                date: schedule.date,
+                status: 'Approved',
+                schedule_id: { [Op.ne]: schedule.schedule_id },
+                start_time: { [Op.lt]: schedule.end_time },
+                end_time: { [Op.gt]: schedule.start_time }
+            }
+        });
+
+        if (conflictBooking || conflictSchedule) {
+            return res.status(400).json({ message: 'Venue already scheduled at this time.' });
         }
 
         schedule.status = 'Approved';
