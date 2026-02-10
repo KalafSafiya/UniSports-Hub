@@ -1,6 +1,8 @@
 const Booking = require('../models/mysql/Booking');
 const Sport = require('../models/mysql/Sport'); // [FIX]: Added missing import
 const Venue = require('../models/mysql/Venue'); // [FIX]: Added missing import
+const Schedule = require('../models/mysql/Schedule');
+const { Op } = require('sequelize');
 const nodemailer = require('nodemailer');
 
 exports.createBooking = async (req, res) => {
@@ -61,7 +63,33 @@ exports.updateBookingStatus = async (req, res) => {
         const booking = await Booking.findByPk(id);
         if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-        // 1. Update the database first
+        if (status === 'Approved') {
+            const conflictBooking = await Booking.findOne({
+                where: {
+                    venue_id: booking.venue_id,
+                    date: booking.date,
+                    status: 'Approved',
+                    booking_id: { [ Op.ne ]: booking.booking_id },
+                    start_time: { [Op.lt]: booking.end_time },
+                    end_time: { [Op.gt]: booking.start_time }
+                }
+            });
+
+            const conflictSchedule = await Schedule.findOne({
+                where: {
+                    venue_id: booking.venue_id,
+                    date: booking.date,
+                    status: 'Approved',
+                    start_time: { [Op.lt]: booking.end_time },
+                    end_time: { [Op.gt]: booking.start_time }
+                }
+            });
+
+            if (conflictBooking || conflictSchedule) {
+                return res.status(400).json({ message: 'Venue already booked at this time' });
+            }
+        }
+
         await booking.update({ 
             status, 
             rejection_reason: status === 'Rejected' ? reason : null 
@@ -76,13 +104,54 @@ exports.updateBookingStatus = async (req, res) => {
             }
         });
 
+        const isApproved = status === 'Approved';
+
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: user_email,
-            subject: `Sports Hub: Your request for ${event_name} is ${status}`,
-            text: status === 'Approved' 
-                ? `Great news! Your booking for ${event_name} has been approved.` 
-                : `We regret to inform you that your booking for ${event_name} was rejected. Reason: ${reason}`
+            subject: `Sports HUb Booking ${status}`,
+            html: `
+            <div style="font-family:Arial;background:#f4f6f8;padding:20px;">
+                <div style="max-width:600px;margin:auto;background:white;border-radius:8px;overflow:hidden;">
+                    
+                    <div style="background:${isApproved ? '#16a34a' : '#dc2626'};color:white;padding:20px;text-align:center;">
+                        <h2>Sports Hub Booking Update</h2>
+                    </div>
+
+                    <div style="padding:25px;color:#333;">
+                        <p>Hello,</p>
+
+                        ${
+                            isApproved
+                                ? `<p>Your booking for <strong>${event_name}</strong> has been 
+                                   <strong style="color:#16a34a;">approved</strong>.</p>`
+                                : `<p>Your booking for <strong>${event_name}</strong> has been 
+                                   <strong style="color:#dc2626;">rejected</strong>.</p>`
+                        }
+
+                        ${
+                            !isApproved
+                                ? `<p><strong>Reason:</strong> ${reason || "Not specified"}</p>`
+                                : ''
+                        }
+
+                        <div style="text-align:center;margin:30px 0;">
+                            <a href="http://localhost:3000"
+                               style="background:#2563eb;color:white;padding:12px 20px;
+                               text-decoration:none;border-radius:5px;">
+                               Open Sports Hub
+                            </a>
+                        </div>
+
+                        <p>Thank you,<br/>Sports Hub Team</p>
+                    </div>
+
+                    <div style="background:#f1f5f9;padding:15px;text-align:center;font-size:12px;">
+                        © ${new Date().getFullYear()} Sports Hub
+                    </div>
+                </div>
+            </div>
+            `
         };
 
         // This line sends the email automatically
